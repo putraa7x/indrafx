@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IndraFXid | Performance Trading</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --obsidian: #05080F;
+  --card: #0D1424;
+  --gold: #C9A84C;
+  --gold-light: #E8C96A;
+  --gold-dim: #9A7A30;
+  --ivory: #F5F0E8;
+  --muted: #8A9BB0;
+  --muted2: #5A6B7E;
+  --green: #16A34A;
+  --green-light: #22C55E;
+  --red-light: #EF4444;
+  --border: rgba(201,168,76,0.12);
+  --border-h: rgba(201,168,76,0.35);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--obsidian);
+  color: var(--ivory);
+  font-family: 'Manrope', sans-serif;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(201,168,76,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Layout ── */
+.container {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 16px;
+  position: relative; z-index: 1;
+}
+@media (min-width: 768px) { .container { padding: 0 28px; } }
+
+/* ── Gold line ── */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.4;
+}
+
+/* ── Header ── */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0 18px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-wrap { display: flex; flex-direction: column; gap: 2px; }
+.logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+}
+@media (min-width: 768px) { .logo { font-size: 22px; } }
+.logo-sub {
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.badge {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid var(--border-h);
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green-light);
+  box-shadow: 0 0 6px var(--green-light);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Hero ── */
+.hero {
+  padding: 48px 0 36px;
+  text-align: center;
+}
+@media (min-width: 768px) { .hero { padding: 80px 0 60px; } }
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 18px;
+}
+.hero-eyebrow span { display: inline-block; width: 28px; height: 1px; background: var(--gold-dim); }
+
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(34px, 8vw, 76px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ivory);
+  margin-bottom: 16px;
+}
+.hero h1 em { font-style: italic; color: var(--gold); }
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  max-width: 380px;
+  margin: 0 auto 32px;
+  line-height: 1.7;
+}
+@media (min-width: 768px) { .hero-desc { font-size: 15px; } }
+
+/* Hero stat bar */
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  max-width: 480px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.02);
+}
+.hero-stat {
+  flex: 1;
+  padding: 16px 12px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.hero-stat:last-child { border-right: none; }
+.hs-label { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted2); margin-bottom: 6px; }
+.hs-value { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--gold); }
+@media (min-width: 768px) {
+  .hero-stats { max-width: 560px; border-radius: 16px; }
+  .hero-stat { padding: 20px 24px; }
+  .hs-value { font-size: 24px; }
+}
+
+/* ── Section header ── */
+.sec-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.sec-head h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 19px; font-weight: 600;
+  color: var(--ivory);
+}
+@media (min-width: 768px) { .sec-head h2 { font-size: 22px; } }
+.sec-tag {
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted2); padding: 3px 10px;
+  border: 1px solid var(--border); border-radius: 100px;
+}
+
+/* ── KPI Grid ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 32px 0;
+}
+@media (min-width: 540px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+@media (min-width: 1024px) { .kpi-grid { grid-template-columns: repeat(6, 1fr); gap: 14px; margin: 48px 0; } }
+
+.kpi {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 16px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s;
+}
+@media (min-width: 768px) { .kpi { border-radius: 20px; padding: 24px 20px; } }
+.kpi::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.kpi:hover { border-color: var(--border-h); transform: translateY(-2px); }
+.kpi:hover::after { opacity: 1; }
+.kpi-label {
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 10px;
+}
+.kpi-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-weight: 700; color: var(--ivory); line-height: 1;
+}
+@media (min-width: 768px) { .kpi-value { font-size: 32px; } }
+.kpi-value.gold { color: var(--gold); }
+.kpi-value.green { color: var(--green-light); }
+.kpi-sub { font-size: 10px; color: var(--muted2); margin-top: 6px; }
+
+/* ── Sections ── */
+.section { margin: 36px 0; }
+@media (min-width: 768px) { .section { margin: 50px 0; } }
+
+.chartbox {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px 14px 14px;
+}
+@media (min-width: 768px) { .chartbox { border-radius: 24px; padding: 28px 28px 20px; } }
+
+/* ── Monthly heatmap ── */
+.heat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (min-width: 480px) { .heat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) { .heat-grid { grid-template-columns: repeat(6, 1fr); } }
+
+.month-tile {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 12px;
+  text-align: center;
+  transition: border-color 0.3s, transform 0.3s;
+  position: relative; overflow: hidden;
+}
+@media (min-width: 768px) { .month-tile { border-radius: 16px; padding: 20px 16px; } }
+.month-tile:hover { border-color: var(--border-h); transform: translateY(-2px); }
+.month-tile::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(22,163,74,0.10), transparent);
+  border-radius: inherit;
+}
+.month-name { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted2); margin-bottom: 8px; }
+.month-pct { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--green-light); }
+@media (min-width: 768px) { .month-pct { font-size: 22px; } }
+
+/* ── Trading Profile ── */
+.spotlight {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+@media (min-width: 768px) {
+  .spotlight {
+    flex-direction: row;
+    border-radius: 24px;
+    padding: 32px;
+    align-items: stretch;
+    gap: 0;
+  }
+}
+.spot-item { flex: 1; }
+@media (min-width: 768px) { .spot-item { padding: 0 28px; } .spot-item:first-child { padding-left: 0; } .spot-item:last-child { padding-right: 0; } }
+.spot-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted2); margin-bottom: 8px; }
+.spot-value { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--ivory); }
+@media (min-width: 768px) { .spot-value { font-size: 20px; } }
+.spot-value.gold { color: var(--gold); }
+.spot-divider {
+  display: none;
+}
+@media (min-width: 768px) {
+  .spot-divider { display: block; width: 1px; background: var(--border); flex-shrink: 0; }
+}
+/* mobile divider between items */
+.spot-sep {
+  display: block;
+  height: 1px;
+  background: var(--border);
+}
+@media (min-width: 768px) { .spot-sep { display: none; } }
+
+/* ── Trade table ── */
+.trade-table-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+@media (min-width: 768px) { .trade-table-wrap { border-radius: 24px; } }
+
+/* Mobile: card list */
+.trade-cards { display: flex; flex-direction: column; }
+.trade-card {
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 6px 12px;
+  align-items: center;
+}
+.trade-card:last-child { border-bottom: none; }
+.tc-top { display: flex; align-items: center; gap: 10px; }
+.tc-date { font-size: 12px; color: var(--muted2); }
+.tc-pair { font-size: 14px; font-weight: 500; color: var(--ivory); }
+.tc-bottom { display: flex; align-items: center; gap: 8px; }
+.tc-dur { font-size: 11px; color: var(--gold-dim); background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); padding: 2px 10px; border-radius: 100px; }
+.tc-result { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; text-align: right; align-self: center; }
+.tc-result.pos { color: var(--green-light); }
+.tc-result.neg { color: var(--red-light); }
+.tc-pill-wrap { grid-column: 2; grid-row: 2; display: flex; justify-content: flex-end; }
+
+/* Desktop: table */
+.trade-table-desktop { display: none; }
+@media (min-width: 640px) {
+  .trade-cards { display: none; }
+  .trade-table-desktop { display: table; width: 100%; border-collapse: collapse; }
+  thead tr { background: rgba(201,168,76,0.05); border-bottom: 1px solid var(--border); }
+  thead th {
+    padding: 14px 20px; text-align: left;
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted2); font-weight: 500;
+  }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 15px 20px; font-size: 14px; color: var(--ivory); }
+}
+
+.type-pill {
+  display: inline-block; padding: 3px 12px;
+  border-radius: 100px; font-size: 11px; letter-spacing: 0.1em; font-weight: 500;
+}
+.buy { background: rgba(22,163,74,0.15); color: var(--green-light); border: 1px solid rgba(34,197,94,0.2); }
+.sell { background: rgba(220,38,38,0.12); color: var(--red-light); border: 1px solid rgba(239,68,68,0.2); }
+.dur { font-size: 11px; color: var(--gold-dim); background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); padding: 2px 10px; border-radius: 100px; }
+.result-pos { color: var(--green-light); font-weight: 500; }
+.result-neg { color: var(--red-light); font-weight: 500; }
+
+/* ── Footer ── */
+footer {
+  margin-top: 60px;
+  padding: 28px 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+@media (min-width: 640px) {
+  footer { flex-direction: row; justify-content: space-between; margin-top: 80px; padding: 36px 0; }
+}
+.footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--gold-dim); }
+.footer-copy { font-size: 11px; color: var(--muted2); letter-spacing: 0.06em; }
+
+/* ── Scroll reveal ── */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+
+.top-nav{display:flex;gap:24px;}
+.top-nav a{color:var(--muted);text-decoration:none;font-size:12px;letter-spacing:.12em;text-transform:uppercase;transition:.3s;}
+.top-nav a:hover{color:var(--gold);}
+@media(max-width:900px){.top-nav{display:none;}}
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="logo-wrap">
+      <div class="logo">IndraFXid</div>
+      <div class="logo-sub">Professional Trading Portfolio · 2026</div>
+    </div>
+    
+<nav class="top-nav">
+<a href="#">Dashboard</a>
+<a href="#">Performance</a>
+<a href="#">Trades</a>
+<a href="#">Deposits</a>
+<a href="#">Withdrawals</a>
+</nav>
+<div class="badge">Live Account</div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero reveal">
+    <div class="hero-eyebrow"><span></span>Professional Trading Journal<span></span></div>
+    <h1>Trading<br><em>Excellence.</em></h1>
+    <p class="hero-desc">Professional trading performance journal by IndraFXid — specializing in intraday and swing trading strategies, with disciplined risk management and consistent execution.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hs-label">Balance</div>
+        <div class="hs-value" id="balance">$15,421</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Return YTD</div>
+        <div class="hs-value" id="gain">+0.00%</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-label">Trades</div>
+        <div class="hs-value" id="trades-count">38</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gold-line"></div>
+
+  <!-- KPI Grid -->
+  <div class="kpi-grid reveal">
+    <div class="kpi">
+      <div class="kpi-label">Net Balance</div>
+      <div class="kpi-value" id="kpi-balance">$15,421</div>
+      <div class="kpi-sub">↑ from $10,000</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total Gain</div>
+      <div class="kpi-value green" id="gain2">+0%</div>
+      <div class="kpi-sub">Since Jan 2026</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Win Rate</div>
+      <div class="kpi-value gold" id="winrate">72%</div>
+      <div class="kpi-sub" id="winrate-sub">27 of 38 wins</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Max Drawdown</div>
+      <div class="kpi-value" id="drawdown">3.12%</div>
+      <div class="kpi-sub">Controlled risk</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Profit Factor</div>
+      <div class="kpi-value gold" id="profit-factor">1.84</div>
+      <div class="kpi-sub">Above breakeven</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Avg RR Ratio</div>
+      <div class="kpi-value" id="rr-ratio">1 : 2.4</div>
+      <div class="kpi-sub">Per swing trade</div>
+    </div>
+  </div>
+
+  <!-- Equity Curve -->
+  <section class="section reveal">
+    <div class="sec-head">
+      <h2>Equity Curve</h2>
+      <span class="sec-tag">Jan – Jun 2026</span>
+    </div>
+    <div class="chartbox">
+      <canvas id="equityChart"></canvas>
+    </div>
+  </section>
+
+  <!-- Monthly Heatmap -->
+  <section class="section reveal">
+    <div class="sec-head">
+      <h2>Monthly Returns</h2>
+      <span class="sec-tag">2026</span>
+    </div>
+    <div class="heat-grid">
+      <div class="month-tile"><div class="month-name">January</div><div class="month-pct" data-month="0">+4.2%</div></div>
+      <div class="month-tile"><div class="month-name">February</div><div class="month-pct" data-month="1">+6.1%</div></div>
+      <div class="month-tile"><div class="month-name">March</div><div class="month-pct" data-month="2">+3.8%</div></div>
+      <div class="month-tile"><div class="month-name">April</div><div class="month-pct" data-month="3">+8.4%</div></div>
+      <div class="month-tile"><div class="month-name">May</div><div class="month-pct" data-month="4">+7.2%</div></div>
+      <div class="month-tile"><div class="month-name">June</div><div class="month-pct" data-month="5">+5.5%</div></div>
+    </div>
+  </section>
+
+  
+<section class="section reveal">
+  <div class="sec-head">
+    <h2>Deposits & Withdrawals</h2>
+    <span class="sec-tag">Account Activity</span>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Total Deposits</div><div class="kpi-value gold" id="total-deposits">$10,000</div><div class="kpi-sub">Initial Capital</div></div>
+    <div class="kpi"><div class="kpi-label">Total Withdrawals</div><div class="kpi-value" id="total-withdrawals">$2,500</div><div class="kpi-sub">Realized Profit</div></div>
+    <div class="kpi"><div class="kpi-label">Net Profit</div><div class="kpi-value green" id="net-profit">$7,921</div><div class="kpi-sub">After Withdrawals</div></div>
+    <div class="kpi"><div class="kpi-label">Current Equity</div><div class="kpi-value gold" id="current-equity">$15,421</div><div class="kpi-sub">Live Account Value</div></div>
+  </div>
+
+  <div class="trade-table-wrap">
+    <table class="trade-table-desktop">
+      <thead><tr><th>Date</th><th>Activity</th><th>Method</th><th>Status</th><th>Amount</th></tr></thead>
+      <tbody id="deposit-withdraw-body">
+      <tr><td>05 Jan 2026</td><td><span class="type-pill buy">Deposit</span></td><td>Bank Transfer</td><td>Completed</td><td class="result-pos">+$10,000</td></tr>
+      <tr><td>15 Mar 2026</td><td><span class="type-pill sell">Withdrawal</span></td><td>Bank Transfer</td><td>Completed</td><td class="result-neg">-$750</td></tr>
+      <tr><td>30 Apr 2026</td><td><span class="type-pill sell">Withdrawal</span></td><td>Bank Transfer</td><td>Completed</td><td class="result-neg">-$850</td></tr>
+      <tr><td>12 Jun 2026</td><td><span class="type-pill sell">Withdrawal</span></td><td>Bank Transfer</td><td>Completed</td><td class="result-neg">-$900</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+  <!-- Trading Profile (STATIC - TIDAK DIUPDATE) -->
+  <section class="section reveal">
+    <div class="sec-head">
+      <h2>Trading Profile</h2>
+      <span class="sec-tag">EUR/USD Focus</span>
+    </div>
+    <div class="spotlight">
+      <div class="spot-item">
+        <div class="spot-label">Primary Instrument</div>
+        <div class="spot-value gold">EUR / USD</div>
+      </div>
+      <span class="spot-sep"></span>
+      <div class="spot-divider"></div>
+      <div class="spot-item">
+        <div class="spot-label">Trading Style</div>
+        <div class="spot-value">Intraday &amp; Swing Trading</div>
+      </div>
+      <span class="spot-sep"></span>
+      <div class="spot-divider"></div>
+      <div class="spot-item">
+        <div class="spot-label">Holding Period</div>
+        <div class="spot-value">1 – 7 Days</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Trades -->
+  <section class="section reveal">
+    <div class="sec-head">
+      <h2>Recent Trades</h2>
+      <span class="sec-tag">Latest Activity</span>
+    </div>
+    <div class="trade-table-wrap">
+
+      <!-- Mobile card list -->
+      <div class="trade-cards" id="trade-cards-mobile">
+        <div class="trade-card">
+          <div class="tc-top"><span class="tc-date">18 Jun</span><span class="tc-pair">EUR/USD</span></div>
+          <div class="tc-result pos">+$241</div>
+          <div class="tc-bottom"><span class="type-pill buy">BUY</span><span class="tc-dur">3 days</span></div>
+          <div class="tc-pill-wrap"></div>
+        </div>
+        <div class="trade-card">
+          <div class="tc-top"><span class="tc-date">14 Jun</span><span class="tc-pair">EUR/USD</span></div>
+          <div class="tc-result neg">−$64</div>
+          <div class="tc-bottom"><span class="type-pill sell">SELL</span><span class="tc-dur">2 days</span></div>
+          <div class="tc-pill-wrap"></div>
+        </div>
+        <div class="trade-card">
+          <div class="tc-top"><span class="tc-date">10 Jun</span><span class="tc-pair">EUR/USD</span></div>
+          <div class="tc-result pos">+$195</div>
+          <div class="tc-bottom"><span class="type-pill buy">BUY</span><span class="tc-dur">4 days</span></div>
+          <div class="tc-pill-wrap"></div>
+        </div>
+        <div class="trade-card">
+          <div class="tc-top"><span class="tc-date">04 Jun</span><span class="tc-pair">EUR/USD</span></div>
+          <div class="tc-result pos">+$318</div>
+          <div class="tc-bottom"><span class="type-pill buy">BUY</span><span class="tc-dur">5 days</span></div>
+          <div class="tc-pill-wrap"></div>
+        </div>
+        <div class="trade-card">
+          <div class="tc-top"><span class="tc-date">28 May</span><span class="tc-pair">EUR/USD</span></div>
+          <div class="tc-result neg">−$88</div>
+          <div class="tc-bottom"><span class="type-pill sell">SELL</span><span class="tc-dur">3 days</span></div>
+          <div class="tc-pill-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Desktop table -->
+      <table class="trade-table-desktop">
+        <thead><tr>
+          <th>Date</th><th>Pair</th><th>Direction</th><th>Duration</th><th>Result</th>
+        </tr></thead>
+        <tbody id="recent-trades-body">
+          <tr><td>18 Jun 2026</td><td>EUR/USD</td><td><span class="type-pill buy">BUY</span></td><td><span class="dur">3 days</span></td><td class="result-pos">+$241</td></tr>
+          <tr><td>14 Jun 2026</td><td>EUR/USD</td><td><span class="type-pill sell">SELL</span></td><td><span class="dur">2 days</span></td><td class="result-neg">−$64</td></tr>
+          <tr><td>10 Jun 2026</td><td>EUR/USD</td><td><span class="type-pill buy">BUY</span></td><td><span class="dur">4 days</span></td><td class="result-pos">+$195</td></tr>
+          <tr><td>04 Jun 2026</td><td>EUR/USD</td><td><span class="type-pill buy">BUY</span></td><td><span class="dur">5 days</span></td><td class="result-pos">+$318</td></tr>
+          <tr><td>28 May 2026</td><td>EUR/USD</td><td><span class="type-pill sell">SELL</span></td><td><span class="dur">3 days</span></td><td class="result-neg">−$88</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo">IndraFXid</div>
+    <div class="footer-copy">© 2026 · IndraFXid Trading Portfolio · Private Use</div>
+  </footer>
+
+</div>
+
+<script>
+/* ── Chart ── */
+const ctx = document.getElementById('equityChart').getContext('2d');
+const grad = ctx.createLinearGradient(0, 0, 0, 220);
+grad.addColorStop(0, 'rgba(201,168,76,0.18)');
+grad.addColorStop(1, 'rgba(201,168,76,0)');
+let equityChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+    datasets: [{
+      data: [10000,11050,11800,13000,14200,15421],
+      borderColor: '#C9A84C', borderWidth: 2.5,
+      backgroundColor: grad, tension: 0.42, fill: true,
+      pointBackgroundColor: '#C9A84C', pointBorderColor: '#05080F',
+      pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0D1424', borderColor: 'rgba(201,168,76,0.3)', borderWidth: 1,
+        titleColor: '#8A9BB0', bodyColor: '#F5F0E8',
+        bodyFont: { family: 'DM Sans', size: 13, weight: '500' },
+        padding: 12,
+        callbacks: { label: c => ' $' + c.raw.toLocaleString() }
+      }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5A6B7E', font: { family: 'DM Sans', size: 11 } } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5A6B7E', font: { family: 'DM Sans', size: 11 }, callback: v => '$' + (v/1000).toFixed(0) + 'k' } }
+    }
+  }
+});
+
+/* ── Counter (Fallback) ── */
+function animateCount(el, target, decimals=2, speed=18) {
+  let n=0; const step=target/(1000/speed);
+  const t=setInterval(()=>{ n+=step; if(n>=target){n=target;clearInterval(t);} el.textContent='+'+n.toFixed(decimals)+'%'; },speed);
+}
+animateCount(document.getElementById('gain'), 54.21);
+animateCount(document.getElementById('gain2'), 54.21);
+
+/* ── Reveal ── */
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{ if(e.isIntersecting){ setTimeout(()=>e.target.classList.add('visible'),i*60); obs.unobserve(e.target); } });
+},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+/* ── ⭐ AUTO-UPDATE DARI data.json ⭐ ── */
+async function loadTradingData() {
+  try {
+    const response = await fetch('data.json?v=' + Date.now());
+    if (!response.ok) throw new Error('Data not found');
+    const data = await response.json();
+    
+    console.log('✅ Auto-update from Myfxbook:', data);
+    
+    // 1. Update Balance (Hero + KPI)
+    if (data.balance) {
+      const formatted = '$' + Number(data.balance).toLocaleString();
+      document.getElementById('balance').textContent = formatted;
+      document.getElementById('kpi-balance').textContent = formatted;
+      document.getElementById('current-equity').textContent = formatted;
+    }
+    
+    // 2. Update Gain
+    if (data.gain !== undefined) {
+      const gainText = (data.gain > 0 ? '+' : '') + data.gain.toFixed(2) + '%';
+      document.getElementById('gain').textContent = gainText;
+      document.getElementById('gain2').textContent = gainText;
+    }
+    
+    // 3. Update Trades Count
+    if (data.trades !== undefined) {
+      document.getElementById('trades-count').textContent = data.trades;
+    }
+    
+    // 4. Update Win Rate
+    if (data.winrate !== undefined) {
+      document.getElementById('winrate').textContent = data.winrate + '%';
+      if (data.wins !== undefined && data.trades !== undefined) {
+        document.getElementById('winrate-sub').textContent = data.wins + ' of ' + data.trades + ' wins';
+      }
+    }
+    
+    // 5. Update Drawdown
+    if (data.drawdown !== undefined) {
+      document.getElementById('drawdown').textContent = data.drawdown.toFixed(2) + '%';
+    }
+    
+    // 6. Update Profit Factor
+    if (data.profitFactor !== undefined) {
+      document.getElementById('profit-factor').textContent = data.profitFactor.toFixed(2);
+    }
+    
+    // 7. Update RR Ratio (static, keep as is)
+    
+    // 8. Update Deposits & Withdrawals
+    if (data.deposits !== undefined) {
+      document.getElementById('total-deposits').textContent = '$' + Number(data.deposits).toLocaleString();
+    }
+    if (data.withdrawals !== undefined) {
+      document.getElementById('total-withdrawals').textContent = '$' + Number(data.withdrawals).toLocaleString();
+    }
+    if (data.profit !== undefined) {
+      document.getElementById('net-profit').textContent = '$' + Number(data.profit).toLocaleString();
+    }
+    
+    // 9. Update Monthly Returns
+    if (data.monthlyReturns && data.monthlyReturns.length === 6) {
+      document.querySelectorAll('.month-pct').forEach((el, i) => {
+        if (i < data.monthlyReturns.length) {
+          const val = data.monthlyReturns[i];
+          el.textContent = (val > 0 ? '+' : '') + val + '%';
+          el.style.color = val > 0 ? 'var(--green-light)' : 'var(--red-light)';
+        }
+      });
+    }
+    
+    // 10. Update Recent Trades (Desktop)
+    if (data.recentTrades && data.recentTrades.length > 0) {
+      const rows = document.querySelectorAll('#recent-trades-body tr');
+      data.recentTrades.forEach((trade, i) => {
+        if (i < rows.length) {
+          const cells = rows[i].querySelectorAll('td');
+          if (cells.length >= 5) {
+            cells[0].textContent = trade.date || 'N/A';
+            cells[1].textContent = trade.pair || 'EUR/USD';
+            const dir = trade.direction || 'BUY';
+            cells[2].innerHTML = `<span class="type-pill ${dir.toLowerCase() === 'buy' ? 'buy' : 'sell'}">${dir}</span>`;
+            cells[3].innerHTML = `<span class="dur">${trade.duration || 'N/A'}</span>`;
+            const result = trade.result || '$0';
+            cells[4].textContent = result;
+            cells[4].className = result.startsWith('+') ? 'result-pos' : 'result-neg';
+          }
+        }
+      });
+      
+      // Update Mobile Cards juga
+      const cards = document.querySelectorAll('#trade-cards-mobile .trade-card');
+      data.recentTrades.forEach((trade, i) => {
+        if (i < cards.length) {
+          const dateEl = cards[i].querySelector('.tc-date');
+          const pairEl = cards[i].querySelector('.tc-pair');
+          const resultEl = cards[i].querySelector('.tc-result');
+          const dirEl = cards[i].querySelector('.type-pill');
+          const durEl = cards[i].querySelector('.tc-dur');
+          
+          if (dateEl) dateEl.textContent = trade.date || 'N/A';
+          if (pairEl) pairEl.textContent = trade.pair || 'EUR/USD';
+          if (resultEl) {
+            resultEl.textContent = trade.result || '$0';
+            resultEl.className = 'tc-result ' + (trade.result?.startsWith('+') ? 'pos' : 'neg');
+          }
+          if (dirEl) {
+            const dir = trade.direction || 'BUY';
+            dirEl.textContent = dir;
+            dirEl.className = 'type-pill ' + (dir.toLowerCase() === 'buy' ? 'buy' : 'sell');
+          }
+          if (durEl) durEl.textContent = trade.duration || 'N/A';
+        }
+      });
+    }
+    
+    // 11. Update Equity Chart
+    if (data.equityData && data.equityData.length === 6) {
+      equityChart.data.datasets[0].data = data.equityData;
+      equityChart.update();
+    }
+    
+  } catch (error) {
+    console.log('📊 Using static data (fallback mode)');
+  }
+}
+
+// Jalankan saat halaman load
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(loadTradingData, 1000);
+});
+
+// Refresh otomatis tiap 5 menit
+setInterval(loadTradingData, 300000);
+
+</script>
+
+<style>
+body{font-family:'Manrope',sans-serif;}
+.logo,.hero h1,.hs-value,.kpi-value,.month-pct,.spot-value,.sec-head h2,.footer-logo,.tc-result{
+font-family:'Playfair Display',serif;
+}
+.logo{font-size:28px!important;font-weight:700;}
+.hero h1{font-size:clamp(52px,8vw,92px)!important;line-height:1.05;}
+.hs-value{font-size:30px!important;}
+.kpi-value{font-size:40px!important;}
+.sec-head h2{font-size:28px!important;}
+.spot-value{font-size:24px!important;}
+.month-pct{font-size:28px!important;}
+.footer-logo{font-size:22px!important;}
+.hero-desc{font-size:16px!important;max-width:650px!important;line-height:1.8!important;}
+</style>
+
+<style>
+.logo{font-size:25px!important;}
+.hero h1{font-size:clamp(46px,7vw,82px)!important;}
+.hs-value{font-size:27px!important;}
+.kpi-value{font-size:35px!important;}
+.sec-head h2{font-size:24px!important;}
+.spot-value{font-size:21px!important;}
+.month-pct{font-size:24px!important;}
+.footer-logo{font-size:18px!important;}
+.hero-desc{font-size:15px!important;}
+
+.tc-result{
+  font-size:26px!important;
+  font-weight:700!important;
+}
+
+.result-pos,
+.result-neg{
+  font-size:18px!important;
+  font-weight:700!important;
+}
+</style>
+
+<style>
+.hero-eyebrow{
+  letter-spacing:0.28em!important;
+  font-size:11px!important;
+}
+
+.hero h1{
+  font-size:clamp(44px,7vw,78px)!important;
+  line-height:1.08!important;
+}
+
+.hero-desc{
+  max-width:580px!important;
+}
+</style>
+
+</body>
+</html>

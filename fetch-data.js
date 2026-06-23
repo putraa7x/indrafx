@@ -1,4 +1,3 @@
-// ⭐ GANTI SESSION ID KAMU DI SINI ⭐
 const SESSION_ID = 'zKcH11PQqq%2BNCNTyZXvWKmRg9au%2BFuAMlUwZlBnctg93DdCvnfDDTmLXooZglCWL%2F3qQ0gwazBb9LFGSO0LSug%3D%3D';
 const ACCOUNT_ID = '12075052';
 const fs = require('fs');
@@ -81,4 +80,4 @@ async function fetchMyfxbookData() {
     }
 }
 
-fetchMyfxbookData();
+fetchMyfxbookData().catch(console.error);

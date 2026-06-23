@@ -1,0 +1,9 @@
+{
+  "name": "indra-trading-update",
+  "version": "1.0.0",
+  "description": "Auto update trading data from Myfxbook",
+  "main": "fetch-data.js",
+  "scripts": {
+    "update": "node fetch-data.js"
+  }
+}
